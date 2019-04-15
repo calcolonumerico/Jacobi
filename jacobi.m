@@ -20,8 +20,8 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
        error("La matrice deve essere sparsa.")
     elseif(size(A,1)~=size(A,2))
         error("La matrice deve essere quadrata.")
-    elseif(length(A)<100)
-        error("La matrice deve essere di grandi dimensioni(almeno 100x100)")
+  %  elseif(length(A)<100)
+     %   error("La matrice deve essere di grandi dimensioni(almeno 100x100)")
     elseif(~isnumeric(A) ||~isreal(A)||any(any(~isfinite(A)))|| any(any(~isa(A,'double')))||any(any(isnan(A))))
       error("Gli elementi della matrice devono essere numeri reali double finiti.")
     end
@@ -36,7 +36,7 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
    end
 
   %Controllo che la diagonale non abbia elementi nulli
-   if any(find(abs(diag(A))<=eps(norm(A))))==1
+   if any(find(abs(diag(A))<=eps(norm(A,Inf))))==1
        error("Sono presenti elementi nulli all'interno della diagonale principale.")
    end
    %Controllo sulla convergenza
@@ -74,12 +74,39 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
 
    
    %Metodo Jacobi
-   
-   
-   
+   TOLX = TOL;     %Tolleranza gestita dinamicamente         
+   itr=1; 
+   n=length(A); 
+                   %Prealloco vettori
+   x0=sparse(zeros(n,1));
+   x= (speye(n)-spdiags(1./spdiags(A,0),0,n,n)*A)*x0 + spdiags(1./spdiags(A,0),0,n,n)*b;%? preso da corrado
+
+   while(itr<MAXITER && (norm(x-x0)>norm(x0)*TOLX))
+    x0=x;
+    for i=1:n
+        sigma=0;
+        for j=1:n
+            if j~=i
+                sigma=sigma+A(i,j)*x(j);
+            end
+        end
+         x(i)=(1/A(i,i))*(b(i)-sigma);
+    end
+    
+    if(TOL*norm(x,Inf)>realmin)
+                TOLX=TOL*norm(x,Inf);
+            else
+                TOLX=realmin;
+            end
+    
+    
+    itr=itr+1;
+    end
+
+    x=x(n);
    %Parametro output numero iterazioni
    if(nargout==2)
-      niter=n;
+      niter=itr;
    end
    
     %Parametro output residuo relativo
