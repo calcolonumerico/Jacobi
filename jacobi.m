@@ -1,27 +1,108 @@
 function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
-%jacobi Summary of this function goes here
-%   Detailed explanation goes here
+%jacobi La funzione risolve un sistema sparso di grandi dimensioni attraverso il
+% metodo iterativo di Jacobi
+%
+% Sintassi:
+% [x,niter,resrel]=jacobi(A,b)
+% [x,niter,resrel]=jacobi(A,b,TOL)
+% [x,niter,resrel]=jacobi(A,b,TOL,MAXITER)
+%
+% Descrizione:
+% x=jacobi(A,b), trova e restituisce la soluzione x di un sistema sparso.Tolleranza e numero massimo di iterazioni sono impostate con valori di default.
+% x=jacobi(A,b,TOL), permette all'utente di specificare la Tolleranza desiderata.
+% x=jacobi(A,b,TOL,MAXITER), permette all'utente di specificare la Tolleranza desiderata 
+% e il numero massimo di iterazioni.
+% [x, niter]=jacobi(___), resituisce anche il numero di iterazioni
+% effettuate per calcolare la soluzione.
+% [x,niter,resrel]=jacobi(___) restituisce anche il valore del residuo
+% relativo
+%
+% Parametri di ingresso:
+%   A               = matrice sparsa di grandi dimensioni.
+%   b               = vettore dei termini noti.
+%   TOL (facolativo) = tolleranza gestita dall'utente.In caso di omissione,
+%                        è posta pari a 10^-6.
+%   MAXITER(facoltativo) = numero massimo di iterazioni. Se
+%                       omesso è posto pari a 500.
+%
+% Parametri di uscita:
+%   x               = valore della soluzione del sistema.
+%   niter (facoltativo)  = numero di iterazioni effettuate. 
+%   resrel (facoltativo) = residuo relativo.
+%
+% Diagnostica:
+% Il programma si arresta mostrando un messaggio di errore nelle seguenti situazioni:
+%   -Se i parametri di input sono meno di due.
+%  - Se il primo parametro d'ingresso non è una matrice congrua al problema.
+%  - Se il secondo parametro d'ingresso non è un vettore congruo al problema.
+%  - Se sulla diagonale ci sono elementi nulli.
+%  - Se TOL o MAXITER sono valori non ammissibili per il problema.
+% 
+% Accuratezza:
+%L'accuratezza dipende dal numero massimo di iterazioni(MAXITER) e dalla tolleranza 
+%(TOL) specificata.
+%
+% Algoritmo
+% La funzione implementa l'algoritmo di jacobi.
+%
+% Esempi di utilizzo:
+%  A=gallery('poisson',10);
+%  x=ones(100,1);
+%  b=A*x;
+%  x=jacobi(A,b,10^-5,400);
+% 
+%  x =
+% 
+%    0.999966124946439
+%
+%----------------------------------------------------------------------
+%
+%  A=gallery('poisson',10);
+%  x=ones(100,1);
+%  b=A*x;
+% [x niter]=jacobi(A,b,10^-5,400);
+% x =
+% 
+%    0.999966124946439
+% niter =
+% 
+%    199
+% 
+%
+%----------------------------------------------------------------------
+%  A=gallery('poisson',15);
+%  x=ones(225,1);
+%  b=A*x;
+% [x niter resrel]=jacobi(A,b,10^-5,400)
+% x =
+% 
+%    0.999963669387009
+% 
+% niter =
+% 
+%    383
+% 
+% resrel =
+% 
+%      7.118559996062571e-05
+%
+%   Autori:
+%       Iodice Ivano
+%       Vincenzo De Francesco
 
  %Controlli numero input
-   if(nargin<2)
-        error("Inserire come input almeno A e b.")
-   elseif(nargin==2)
-       TOL=10^-6;
-       MAXITER=500;
-   elseif(nargin==3)
-       MAXITER=500;
-   end
-  
- %Controlli sulla matrice
-
+ if(nargin<2)
+      error("Inserire come input almeno A e b.")
+ end
+  %Controlli sulla matrice
     if(~ismatrix(A))
        error("Il primo input deve essere una matrice.")
     elseif(~issparse(A)||isempty(A))
-       error("La matrice deve essere sparsa.")
+       error("La matrice deve essere sparsa e non vuota.")
     elseif(size(A,1)~=size(A,2))
         error("La matrice deve essere quadrata.")
-  %  elseif(length(A)<100)
-     %   error("La matrice deve essere di grandi dimensioni(almeno 100x100)")
+    elseif(length(A)<100)
+       error("La matrice deve essere di grandi dimensioni(almeno 100x100)")
     elseif(~isnumeric(A) ||~isreal(A)||any(any(~isfinite(A)))|| any(any(~isa(A,'double')))||any(any(isnan(A))))
       error("Gli elementi della matrice devono essere numeri reali double finiti.")
     end
@@ -36,29 +117,29 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
    end
 
   %Controllo che la diagonale non abbia elementi nulli
-   if any(find(abs(diag(A))<=eps(norm(A,Inf))))==1
+   if any(find(abs(spdiags(A,0))<=eps(norm(A,Inf))))==1
        error("Sono presenti elementi nulli all'interno della diagonale principale.")
    end
-   %Controllo sulla convergenza
-  if(abs(diag(A))<=abs(sum(A,2)-diag(A)))
-       error("La matrice non ha diagonale strettamante dominante. Il metodo non converge.")
-  end
- 
+   
+
+ if(nargin<3 ||isempty(TOL))
+     TOL=10^-6;
   %Verifica se TOL è uno scalare, e se lo è verifica se è ammissibile
-   if(~isscalar(TOL))
+ elseif(~isscalar(TOL))
        error('Errore, TOL deve essere uno scalare')
    elseif (~isfinite(TOL) ||  ~isreal(TOL) || ischar(TOL)||isnan(TOL))
         error('Errore, TOL deve essere settato come un numero reale.')
-   end
+ end
 
    
-
+if(nargin<4 ||isempty(MAXITER))
+    MAXITER=500;
   %Verifica se MAXITER è uno scalare, e se lo è verifica se è ammissibile;
-   if(~isscalar(MAXITER))
+elseif(~isscalar(MAXITER))
        error('Errore, MAXITER deve essere uno scalare')
    elseif (~isfinite(MAXITER) ||  ~isreal(MAXITER) || ischar(MAXITER)||isnan(MAXITER))
         error('Errore, MAXITER deve essere settato come un numero reale finito.')
-   end
+end
 
      
    %Verifica se TOL appartiene a dei valori corretti
@@ -72,48 +153,44 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
       warning('Valore MAXITER errato. Utilizzo valore di default.') 
    end
 
+  %Controllo sulla convergenza
+  if(abs(spdiags(A,0))<=abs(sum(A,2)-spdiags(A,0)))
+       warning("La matrice non ha diagonale strettamante dominante. Il metodo potrebbe non convergere.")
+  end
    
    %Metodo Jacobi
    TOLX = TOL;     %Tolleranza gestita dinamicamente         
    itr=1; 
    n=length(A); 
-                   %Prealloco vettori
+                 %Prealloco vettori
    x0=sparse(zeros(n,1));
-   x= (speye(n)-spdiags(1./spdiags(A,0),0,n,n)*A)*x0 + spdiags(1./spdiags(A,0),0,n,n)*b;%? preso da corrado
+   x= (speye(n)-spdiags(1./spdiags(A,0),0,n,n)*A)*x0 + spdiags(1./spdiags(A,0),0,n,n)*b;
 
    while(itr<MAXITER && (norm(x-x0)>norm(x0)*TOLX))
-    x0=x;
-    for i=1:n
-        sigma=0;
-        for j=1:n
-            if j~=i
-                sigma=sigma+A(i,j)*x(j);
-            end
-        end
-         x(i)=(1/A(i,i))*(b(i)-sigma);
-    end
-    
-    if(TOL*norm(x,Inf)>realmin)
+      if(TOL*norm(x,Inf)>realmin)
                 TOLX=TOL*norm(x,Inf);
             else
                 TOLX=realmin;
-            end
-    
-    
-    itr=itr+1;
-    end
-
-    x=x(n);
+      end
+      x0=x;
+      x= (speye(n)-spdiags(1./spdiags(A,0),0,n,n)*A)*x0 + spdiags(1./spdiags(A,0),0,n,n)*b;
+      itr=itr+1;
+   end
+   residuo=norm(b-A*x)/norm(b);
+   x=x(n);   
    %Parametro output numero iterazioni
-   if(nargout==2)
+   if(nargout>=2)
       niter=itr;
    end
    
     %Parametro output residuo relativo
    if(nargout==3)
-      resrel=norm(b-A*x)/norm(b);
+      resrel=residuo;
+   end
+  
+   %Se non convergo stampo a video warning
+   if(itr >= MAXITER)
+    warning('L ''algoritmo si è arrestato all''iterazione %d, senza convergere. Il residuo relativo è %f. ',itr,residuo)
    end
 
-
 end
-
