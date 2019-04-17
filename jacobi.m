@@ -51,9 +51,10 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
 %  b=A*x;
 %  x=jacobi(A,b,10^-5,400);
 % 
-%  x =
+%  
+% x =
 % 
-%    0.999966124946439
+%    0.999999999985448
 %
 %----------------------------------------------------------------------
 %
@@ -63,10 +64,10 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
 % [x niter]=jacobi(A,b,10^-5,400);
 % x =
 % 
-%    0.999966124946439
+%    0.999999999985448
 % niter =
 % 
-%    199
+%     36
 % 
 %
 %----------------------------------------------------------------------
@@ -76,15 +77,17 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
 % [x niter resrel]=jacobi(A,b,10^-5,400)
 % x =
 % 
-%    0.999963669387009
+%    0.999999999992724
+% 
 % 
 % niter =
 % 
-%    383
+%     37
+% 
 % 
 % resrel =
 % 
-%      7.118559996062571e-05
+%    1.283330914010793
 %
 %   Autori:
 %       Iodice Ivano
@@ -107,6 +110,12 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
       error("Gli elementi della matrice devono essere numeri reali double finiti.")
     end
     
+   %Controllo che la diagonale non abbia elementi nulli
+   if any(find(abs(spdiags(A,0))<=eps(norm(A,Inf))))==1
+       error("Sono presenti elementi nulli all'interno della diagonale principale.")
+   end
+    
+    
     %Controlli sul vettore 
    if(~isvector(b)||isscalar(b)||isrow(b))
        error('Errore, b deve essere un vettore colonna.')
@@ -114,11 +123,6 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
        error("Il vettore b e la matrice A hanno dimensioni diverse.")
    elseif(any(ischar(b))||any(~isfinite(b)) ||  any(~isreal(b))||any(~isa(b,'double'))||any(isnan(b)))
        error('Errore, b deve contenere reali finiti double.')
-   end
-
-  %Controllo che la diagonale non abbia elementi nulli
-   if any(find(abs(spdiags(A,0))<=eps(norm(A,Inf))))==1
-       error("Sono presenti elementi nulli all'interno della diagonale principale.")
    end
    
 
@@ -143,7 +147,7 @@ end
 
      
    %Verifica se TOL appartiene a dei valori corretti
-   if(sign(TOL)<=0||TOL<10^-6)
+   if(sign(TOL)<=0||TOL<eps)
       TOL=10^-6;
       warning('Valore TOL errato. Utilizzo valore di default.') 
    end
@@ -173,7 +177,7 @@ end
                 TOLX=realmin;
       end
       x0=x;
-      x= (speye(n)-spdiags(1./spdiags(A,0),0,n,n)*A)*x0 + spdiags(1./spdiags(A,0),0,n,n)*b;
+      x=(b-((sum(A,2)-spdiags(A,0)).*x0))./spdiags(A,0);
       itr=itr+1;
    end
    residuo=norm(b-A*x)/norm(b);
