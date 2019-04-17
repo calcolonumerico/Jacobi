@@ -106,7 +106,7 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
         error("La matrice deve essere quadrata.")
     elseif(length(A)<100)
        error("La matrice deve essere di grandi dimensioni(almeno 100x100)")
-    elseif(~isnumeric(A) ||~isreal(A)||any(any(~isfinite(A)))|| any(any(~isa(A,'double')))||any(any(isnan(A))))
+    elseif(~isnumeric(A) ||~isreal(A)||any(~isfinite(A(:)))|| any(~isa(A(:),'double'))||any(isnan(A(:))))
       error("Gli elementi della matrice devono essere numeri reali double finiti.")
     end
     
@@ -147,7 +147,7 @@ end
 
      
    %Verifica se TOL appartiene a dei valori corretti
-   if(sign(TOL)<=0||TOL<eps)
+   if(sign(TOL)<=0||TOL<10^-6)
       TOL=10^-6;
       warning('Valore TOL errato. Utilizzo valore di default.') 
    end
@@ -169,10 +169,12 @@ end
                  %Prealloco vettori
    x0=sparse(zeros(n,1));
    x= (speye(n)-spdiags(1./spdiags(A,0),0,n,n)*A)*x0 + spdiags(1./spdiags(A,0),0,n,n)*b;
-
+   val=TOL*norm(x,Inf);
+   
    while(itr<MAXITER && (norm(x-x0)>norm(x0)*TOLX))
-      if(TOL*norm(x,Inf)>realmin)
-                TOLX=TOL*norm(x,Inf);
+      
+      if(val>realmin)
+                TOLX=val;
             else
                 TOLX=realmin;
       end
@@ -180,7 +182,7 @@ end
       x=(b-((sum(A,2)-spdiags(A,0)).*x0))./spdiags(A,0);
       itr=itr+1;
    end
-   residuo=norm(b-A*x)/norm(b);
+   residuo=norm(b-A*x,Inf)/norm(b,Inf);
    x=x(n);   
    %Parametro output numero iterazioni
    if(nargout>=2)
