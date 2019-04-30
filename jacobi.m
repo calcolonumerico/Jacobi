@@ -46,52 +46,64 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
 % La funzione implementa l'algoritmo di jacobi.
 %
 % Esempi di utilizzo:
-%  A=gallery('poisson',10);
-%  x=ones(100,1);
-%  b=A*x;
-%  x=jacobi(A,b,10^-5,400);
+% A=gallery('poisson',10); 
+% x=ones(100,1); 
+% b=A*x; 
+% x=jacobi(A,b,10^-5,400)
+% 
+% x =
+%  
+%   0.999999999985448
+%   .
+%   .
+%   .
+%
+%----------------------------------------------------------------------
+%
+% A=gallery('poisson',10); 
+% x=ones(100,1);
+%  b=A*x; 
+% [x niter]=jacobi(A,b,10^-5,400);
+% x =
+%  
+%     
+%   0.999999999985448
+%   .
+%   .
+%   .
+% 
+% niter =
+%  
+%     16
+% 
+%
+%----------------------------------------------------------------------
+% A=gallery('poisson',15); 
+% x=ones(225,1);
+%  b=A*x; 
+% [x niter resrel]=jacobi(A,b,10^-5,400)
 % 
 %  
 % x =
 % 
-%    0.999999999985448
-%
-%----------------------------------------------------------------------
-%
-%  A=gallery('poisson',10);
-%  x=ones(100,1);
-%  b=A*x;
-% [x niter]=jacobi(A,b,10^-5,400);
-% x =
-% 
-%    0.999999999985448
-% niter =
-% 
-%     36
-% 
-%
-%----------------------------------------------------------------------
-%  A=gallery('poisson',15);
-%  x=ones(225,1);
-%  b=A*x;
-% [x niter resrel]=jacobi(A,b,10^-5,400)
-% x =
-% 
-%    0.999999999992724
+%   1.000000000931323
+%   .
+%   .
 % 
 % 
 % niter =
 % 
-%     37
+%     15
 % 
 % 
 % resrel =
 % 
-%    1.283330914010793
+%      6.103422492742538e-05
 %
 %   Autori:
 %       Iodice Ivano
 %       Vincenzo De Francesco
+
 
  %Controlli numero input
  if(nargin<2)
@@ -147,7 +159,7 @@ end
 
      
    %Verifica se TOL appartiene a dei valori corretti
-   if(sign(TOL)<=0||TOL<10^-6)
+   if(sign(TOL)<=0||TOL<eps)
       TOL=10^-6;
       warning('Valore TOL errato. Utilizzo valore di default.') 
    end
@@ -168,8 +180,8 @@ end
    n=length(A); 
                  %Prealloco vettori
    x0=sparse(zeros(n,1));
-   x= (speye(n)-spdiags(1./spdiags(A,0),0,n,n)*A)*x0 + spdiags(1./spdiags(A,0),0,n,n)*b;
-   val=TOL*norm(x,Inf);
+   x=(b-((sum(A.*x0,2)-spdiags(A,0))))./spdiags(A,0);
+   val=TOLX*norm(x,Inf);
    
    while(itr<MAXITER && (norm(x-x0)>norm(x0)*TOLX))
       
@@ -179,11 +191,11 @@ end
                 TOLX=realmin;
       end
       x0=x;
-      x=(b-((sum(A,2)-spdiags(A,0)).*x0))./spdiags(A,0);
+      x=(b-((sum((A.*x0),2)-spdiags(A,0))))./spdiags(A,0);
       itr=itr+1;
    end
    residuo=norm(b-A*x,Inf)/norm(b,Inf);
-   x=x(n);   
+    
    %Parametro output numero iterazioni
    if(nargout>=2)
       niter=itr;
@@ -200,3 +212,4 @@ end
    end
 
 end
+
