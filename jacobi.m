@@ -1,109 +1,4 @@
 function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
-%jacobi La funzione risolve un sistema sparso di grandi dimensioni attraverso il
-% metodo iterativo di Jacobi
-%
-% Sintassi:
-% [x,niter,resrel]=jacobi(A,b)
-% [x,niter,resrel]=jacobi(A,b,TOL)
-% [x,niter,resrel]=jacobi(A,b,TOL,MAXITER)
-%
-% Descrizione:
-% x=jacobi(A,b), trova e restituisce la soluzione x di un sistema sparso.Tolleranza e numero massimo di iterazioni sono impostate con valori di default.
-% x=jacobi(A,b,TOL), permette all'utente di specificare la Tolleranza desiderata.
-% x=jacobi(A,b,TOL,MAXITER), permette all'utente di specificare la Tolleranza desiderata 
-% e il numero massimo di iterazioni.
-% [x, niter]=jacobi(___), resituisce anche il numero di iterazioni
-% effettuate per calcolare la soluzione.
-% [x,niter,resrel]=jacobi(___) restituisce anche il valore del residuo
-% relativo
-%
-% Parametri di ingresso:
-%   A               = matrice sparsa di grandi dimensioni.
-%   b               = vettore dei termini noti.
-%   TOL (facolativo) = tolleranza gestita dall'utente.In caso di omissione,
-%                        è posta pari a 10^-6.
-%   MAXITER(facoltativo) = numero massimo di iterazioni. Se
-%                       omesso è posto pari a 500.
-%
-% Parametri di uscita:
-%   x               = valore della soluzione del sistema.
-%   niter (facoltativo)  = numero di iterazioni effettuate. 
-%   resrel (facoltativo) = residuo relativo.
-%
-% Diagnostica:
-% Il programma si arresta mostrando un messaggio di errore nelle seguenti situazioni:
-%   -Se i parametri di input sono meno di due.
-%  - Se il primo parametro d'ingresso non è una matrice congrua al problema.
-%  - Se il secondo parametro d'ingresso non è un vettore congruo al problema.
-%  - Se sulla diagonale ci sono elementi nulli.
-%  - Se TOL o MAXITER sono valori non ammissibili per il problema.
-% 
-% Accuratezza:
-%L'accuratezza dipende dal numero massimo di iterazioni(MAXITER) e dalla tolleranza 
-%(TOL) specificata.
-%
-% Algoritmo
-% La funzione implementa l'algoritmo di jacobi.
-%
-% Esempi di utilizzo:
-% A=gallery('poisson',10); 
-% x=ones(100,1); 
-% b=A*x; 
-% x=jacobi(A,b,10^-5,400)
-% 
-% x =
-%  
-%   0.999999999985448
-%   .
-%   .
-%   .
-%
-%----------------------------------------------------------------------
-%
-% A=gallery('poisson',10); 
-% x=ones(100,1);
-%  b=A*x; 
-% [x niter]=jacobi(A,b,10^-5,400);
-% x =
-%  
-%     
-%   0.999999999985448
-%   .
-%   .
-%   .
-% 
-% niter =
-%  
-%     16
-% 
-%
-%----------------------------------------------------------------------
-% A=gallery('poisson',15); 
-% x=ones(225,1);
-%  b=A*x; 
-% [x niter resrel]=jacobi(A,b,10^-5,400)
-% 
-%  
-% x =
-% 
-%   1.000000000931323
-%   .
-%   .
-% 
-% 
-% niter =
-% 
-%     15
-% 
-% 
-% resrel =
-% 
-%      6.103422492742538e-05
-%
-%   Autori:
-%       Iodice Ivano
-%       Vincenzo De Francesco
-
 
  %Controlli numero input
  if(nargin<2)
@@ -169,21 +64,19 @@ end
       warning('Valore MAXITER errato. Utilizzo valore di default.') 
    end
 
-  %Controllo sulla convergenza
-  if(abs(spdiags(A,0))<=abs(sum(A,2)-spdiags(A,0)))
-       warning("La matrice non ha diagonale strettamante dominante. Il metodo potrebbe non convergere.")
-  end
+  
    
    %Metodo Jacobi
    TOLX = TOL;     %Tolleranza gestita dinamicamente         
    itr=1; 
    n=length(A); 
-                 %Prealloco vettori
+   d=spdiags(A,0);    
+   %Prealloco vettori
    x0=sparse(zeros(n,1));
-   x=(b-((sum(A.*x0,2)-spdiags(A,0))))./spdiags(A,0);
+   x=(b-((sum(A.*x0,2)-d)))./d;
    val=TOLX*norm(x,Inf);
    
-   while(itr<MAXITER && (norm(x-x0)>norm(x0)*TOLX))
+   while(itr<MAXITER && (norm(x-x0,Inf)>norm(x0,Inf)*TOLX))
       
       if(val>realmin)
                 TOLX=val;
@@ -191,10 +84,10 @@ end
                 TOLX=realmin;
       end
       x0=x;
-      x=(b-((sum((A.*x0),2)-spdiags(A,0))))./spdiags(A,0);
+      x=(b-((sum((A.*x0),2)-d)))./d;
       itr=itr+1;
    end
-   residuo=norm(b-A*x,Inf)/norm(b,Inf);
+   residuo=norm(b-A*x)/norm(b);
     
    %Parametro output numero iterazioni
    if(nargout>=2)
