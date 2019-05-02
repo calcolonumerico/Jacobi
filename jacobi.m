@@ -1,4 +1,70 @@
 function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
+% jacobi La funzione risolve un sistema sparso di grandi dimensioni attraverso il metodo iterativo di Jacobi
+% 
+%Sintassi:
+%[x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
+% 
+%Descrizione:
+% x=jacobi(A,b), trova e restituisce la soluzione x di un sistema sparso.Tolleranza e numero massimo di iterazioni sono impostate con valori di default. 
+% x=jacobi(A,b,TOL), permette all'utente di specificare la Tolleranza desiderata. 
+% x=jacobi(A,b,TOL,MAXITER), permette all'utente di specificare la Tolleranza desiderata e il numero massimo di iterazioni. 
+% [x, niter]=jacobi(_), resituisce anche il numero di iterazioni effettuate per calcolare la soluzione.
+% [x,niter,resrel]=jacobi(_) restituisce anche il valore del residuo relativo
+% 
+% Parametri di ingresso:
+% A = matrice sparsa di grandi dimensioni. 
+% b = vettore colonna dei termini noti.
+% TOL (facoltativo) = tolleranza.Numero di cifre significative richieste dall'utente. Se non specificato è posta pari a 10^-6.
+% MAXITER (facoltativo)= numero massimo di iterazioni.Limita il numero di iterazioni che la funzione può compiere. Se omesso è posto pari a 500.
+% 
+% Parametri di uscita:
+% x = valore della soluzione del sistema. 
+% 
+% Diagnostica:
+% Il programma si arresta mostrando un messaggio di errore nelle seguenti situazioni:
+% Se i parametri di input sono meno di due. 
+% Se il primo parametro d'ingresso non è una matrice congrua al problema. 
+% Se il secondo parametro d'ingresso non è un vettore congruo al problema.
+% Se sulla diagonale ci sono elementi nulli. 
+% Se TOL o MAXITER sono valori non ammissibili per il problema.
+% 
+% Accuratezza:
+% L'accuratezza dipende dal numero massimo di iterazioni(MAXITER) e dalla tolleranza (TOL) specificata e dal condizionamento della matrice.
+% 
+% Algoritmo:
+% La funzione implementa l'algoritmo di jacobi.
+% 
+% Esempi di utilizzo:
+% A=gallery('poisson',10); 
+% x=ones(100,1); 
+% b=A*x; 
+% x=jacobi(A,b,10^-5,400)
+% 
+% x =
+% 
+%    1.000000476837158
+%    .
+%--------------------------------
+% A=gallery('poisson',15); 
+% x=ones(225,1);
+%  b=A*x; 
+% [x niter resrel]=jacobi(A,b,10^-5,400)
+% 
+% x =
+% 
+%   1.000000000931323
+%   .
+% 
+% niter =
+% 
+%     18
+% 
+% resrel =
+% 
+%      3.925279456634614e-06
+% Autori:
+%       Iodice Ivano
+%       Vincenzo De Francesco
 
  %Controlli numero input
  if(nargin<2)
