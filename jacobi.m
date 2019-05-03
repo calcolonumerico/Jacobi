@@ -42,29 +42,42 @@ function [x,niter,resrel] = jacobi(A,b,TOL,MAXITER)
 % 
 % x =
 % 
-%    1.000000476837158
+%     0.999990598963229
 %    .
-%--------------------------------
-% A=gallery('poisson',15); 
-% x=ones(225,1);
-%  b=A*x; 
-% [x niter resrel]=jacobi(A,b,10^-5,400)
-% 
+%---------------------------------
+%A=gallery('poisson',10); 
+%x=ones(100,1);
+%b=A*x; 
+%[x niter]=jacobi(A,b,10^-5,400)
 % x =
-% 
-%   1.000000000931323
+%    0.999990598963229
 %   .
 % 
 % niter =
 % 
-%     18
+%    230
+%--------------------------------
+% A=gallery('poisson',15); 
+% x=ones(225,1);
+%  b=A*x; 
+% [x niter resrel]=jacobi(A,b,10^-5,500)
+% 
+% x =
+% 
+%    0.999990472997586
+%   .
+% 
+% niter =
+% 
+%     452
 % 
 % resrel =
 % 
-%      3.925279456634614e-06
+%      1.866353753193558e-05
 % Autori:
 %       Iodice Ivano
 %       Vincenzo De Francesco
+
 
  %Controlli numero input
  if(nargin<2)
@@ -125,7 +138,7 @@ end
       warning('Valore TOL errato. Utilizzo valore di default.') 
    end
     %Verifica se MAXITER appartiene a dei valori corretti
-   if(MAXITER<2||sign(MAXITER)<=0|| MAXITER>500)
+   if(MAXITER<2||sign(MAXITER)<=0)
       MAXITER=500;
       warning('Valore MAXITER errato. Utilizzo valore di default.') 
    end
@@ -136,10 +149,12 @@ end
    TOLX = TOL;     %Tolleranza gestita dinamicamente         
    itr=1; 
    n=length(A); 
-   d=spdiags(A,0);    
+  
    %Prealloco vettori
-   x0=sparse(zeros(n,1));
-   x=(b-((sum(A.*x0,2)-d)))./d;
+   B=speye(n)-1./diag(A).*A;
+   c=1./diag(A).*b;
+   x0=zeros(n,1);
+   x=B*x0+c;
    val=TOLX*norm(x,Inf);
    
    while(itr<MAXITER && (norm(x-x0,Inf)>norm(x0,Inf)*TOLX))
@@ -150,7 +165,7 @@ end
                 TOLX=realmin;
       end
       x0=x;
-      x=(b-((sum((A.*x0),2)-d)))./d;
+      x=B*x0+c;
       itr=itr+1;
    end
    residuo=norm(b-A*x)/norm(b);
